@@ -37,6 +37,16 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Align Java and Kotlin JVM targets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for module in ("core", "phone", "tv"):
+              path = Path(module) / "build.gradle.kts"
+              with path.open("a") as out:
+                  out.write("\\nandroid { compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 } }\\n")
+          PY
+
       - name: Run Kotlin tests and build both APKs
         run: gradle --no-daemon :core:testDebugUnitTest :phone:assembleDebug :tv:assembleDebug
 

@@ -44,7 +44,8 @@ jobs:
           for module in ("core", "phone", "tv"):
               path = Path(module) / "build.gradle.kts"
               with path.open("a") as out:
-                  out.write("\\nandroid { compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 } }\\n")
+                  print("", file=out)
+                  print("android { compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 } }", file=out)
           PY
 
       - name: Run Kotlin tests and build both APKs

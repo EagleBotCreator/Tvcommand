@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -68,3 +68,20 @@ jobs:
           path: tv/build/outputs/apk/debug/tv-debug.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish direct-download APKs in GitHub Releases
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp tv/build/outputs/apk/debug/tv-debug.apk tv.apk
+          cp phone/build/outputs/apk/debug/phone-debug.apk phone.apk
+          if gh release view v0.1-debug --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload v0.1-debug tv.apk phone.apk --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create v0.1-debug tv.apk phone.apk \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "TV Command v0.1 experimental debug APKs" \
+              --notes "Experimental, unsigned-for-store debug builds intended for testing on a trusted private Wi-Fi network. Not a security-audited release. Phone and TV apps must be installed separately." \
+              --latest
+          fi

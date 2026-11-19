@@ -1,0 +1,58 @@
+name: Build TV Command APKs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract original Android Studio source
+        run: tar -xJf tvcommand-src.tar.xz
+
+      - name: Configure Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configure Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android 35 platform and tools
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Configure Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Run Kotlin tests and build both APKs
+        run: gradle --no-daemon :core:testDebugUnitTest :phone:assembleDebug :tv:assembleDebug
+
+      - name: Publish phone debug APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: TVCommand-Phone-debug-APK
+          path: phone/build/outputs/apk/debug/phone-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish Android TV debug APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: TVCommand-TV-debug-APK
+          path: tv/build/outputs/apk/debug/tv-debug.apk
+          if-no-files-found: error
+          retention-days: 30
